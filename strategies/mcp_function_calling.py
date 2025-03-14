@@ -3,7 +3,6 @@ import time
 from collections.abc import Generator
 from copy import deepcopy
 from typing import Any, Optional, cast
-import asyncio
 
 from dify_plugin.entities.agent import AgentInvokeMessage
 from dify_plugin.entities.model.llm import (
@@ -87,11 +86,33 @@ class FunctionCallingAgentStrategy(AgentStrategy):
         
         mcp_tools = []
         mcp_tool_instances = {}
-        if mcp_server_url := parameters.get("mcp_server"):
-            m_client = MCPClient(mcp_server_url)
-            mcp_tools = asyncio.run(m_client.get_tools())
-            mcp_tool_instances = {tool.name: tool for tool in mcp_tools} if mcp_tools else {}
-        tools = fc_params.tools
+        mcp_tool_client = {}
+        if mcp_server := parameters.get("mcp_server"):
+            try:
+                # currently all string from dify will auto convert double quotes to single quote 
+                # wait for fix to remove this line
+                mcp_server = mcp_server.replace("'", '"')
+                mcp_configs = json.loads(mcp_server)
+            except json.JSONDecodeError:
+                if not mcp_server.startswith("http"):
+                    raise
+                mcp_configs = {
+                    "default_server": {
+                        "url": mcp_server,
+                    }
+                }
+            for mcp_server_name, mcp_server_config in mcp_configs.items():
+                mcp_server_url = mcp_server_config.get("url")
+                if not mcp_server_url:
+                    raise Exception("MCP server url is not provided")
+
+
+                m_client = MCPClient(mcp_server_url)
+                m_client.initialize()
+                mcp_tools = m_client.list_tools()
+                mcp_tool_instances = {tool.get("name"): tool for tool in mcp_tools}
+                mcp_tool_client = {tool.get("name"): m_client for tool in mcp_tools}
+        tools = fc_params.tools or []
         tool_instances = {tool.identity.name: tool for tool in tools} if tools else {}
         # init prompt messages
         model = fc_params.model
@@ -343,12 +364,11 @@ class FunctionCallingAgentStrategy(AgentStrategy):
                     }
                 elif mcp_tool_instance:
                     try:
-                        result = asyncio.run(
-                            m_client.call_tool(
+                        m_client = mcp_tool_client.get(tool_call_name)
+                        result = m_client.call_tool(
                                 tool_name=tool_call_name,
                                 tool_args=tool_call_args,
                             )
-                        )
                     except Exception as e:
                         result = f"tool invoke error: {str(e)}"
                     tool_response = {
@@ -420,6 +440,9 @@ class FunctionCallingAgentStrategy(AgentStrategy):
                 },
             )
             iteration_step += 1
+
+        for m_client in mcp_tool_client.values():
+            m_client.close() 
 
         yield self.create_json_message(
             {
@@ -584,9 +607,9 @@ class FunctionCallingAgentStrategy(AgentStrategy):
         prompt_messages_tools = []
         for tool in mcp_tools:
             prompt_message = PromptMessageTool(
-                name=tool.name,
-                description=tool.description,
-                parameters=tool.inputSchema,
+                name=tool.get("name"),
+                description=tool.get("description"),
+                parameters=tool.get("inputSchema"),
             )
             prompt_messages_tools.append(prompt_message)
         return prompt_messages_tools

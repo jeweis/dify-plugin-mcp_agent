@@ -15,16 +15,26 @@ Same as offical function call agent strategy, but with MCP tool calls.
 
 ### Usage
 
+![agent](./_assets/agent.png)
+
 #### Input a mcp server url:
 ```shell
 http://localhost:8000/sse
 ```
 
-#### Input multi mcp server url:
-```shell
-[
-    {}
-]
+#### Input multi mcp server:
+```json
+{
+  "server_name1": {
+    "url": "http://127.0.0.1:8000/sse",
+    "headers": {},
+    "timeout": 5,
+    "sse_read_timeout": 300
+  },
+  "server_name2": {
+    "url": "http://127.0.0.1:8001/sse"
+  }
+}
 ```
 
 
