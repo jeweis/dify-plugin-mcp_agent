@@ -41,15 +41,15 @@ For multiple MCP servers with detailed connection parameters:
 ```
 
 
-### How to change MCP server from `stdio` to `sse` ?
+## How to change MCP server from `stdio` to `sse` ?
 
-#### Option 1: source code modification
+### Option 1: source code modification
 ```python
 if __name__ == "__main__":
     mcp.run(transport='sse')
 ```
 
-#### Option 2: using the [mcp-proxy](https://github.com/sparfenyuk/mcp-proxy)
+### Option 2: using the [mcp-proxy](https://github.com/sparfenyuk/mcp-proxy)
 ```shell
 uv tool install mcp-proxy
 mcp-proxy --sse-host=0.0.0.0 --sse-port=8080 uvx your-server
