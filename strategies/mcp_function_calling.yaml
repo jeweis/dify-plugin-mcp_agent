@@ -18,8 +18,7 @@ parameters:
       pt_BR: Model
   - name: tools
     type: array[tools]
-    # change to false when fix issue
-    required: true
+    required: false
     label:
       en_US: Tools list
       zh_Hans: 工具列表

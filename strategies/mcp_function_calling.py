@@ -89,9 +89,6 @@ class FunctionCallingAgentStrategy(AgentStrategy):
         mcp_tool_client = {}
         if mcp_server := parameters.get("mcp_server"):
             try:
-                # currently all string from dify will auto convert double quotes to single quote 
-                # wait for fix to remove this line
-                mcp_server = mcp_server.replace("'", '"')
                 mcp_configs = json.loads(mcp_server)
             except json.JSONDecodeError:
                 if not mcp_server.startswith("http"):
