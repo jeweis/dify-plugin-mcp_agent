@@ -1,9 +1,9 @@
 # MCP Agent Strategy
 
-**Author:** hjlarry  
+**Author:** jeweis
 **Version:** 0.0.2  
 **Type:** agent strategy  
-**Repo&Issue:** [https://github.com/hjlarry/dify-plugin-mcp_agent](https://github.com/hjlarry/dify-plugin-mcp_agent)  
+**Repo&Issue:** [https://github.com/jeweis/dify-plugin-mcp_agent](https://github.com/jeweis/dify-plugin-mcp_agent)  
 
 A Dify Agent strategy plugin that integrates MCP tool calls and common function calls capabilities.
 

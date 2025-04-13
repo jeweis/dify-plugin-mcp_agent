@@ -1,10 +1,10 @@
 version: 0.0.1
 type: plugin
-author: "hjlarry"
+author: "jeweis"
 name: "agent"
 label:
   en_US: "MCP Agent Strategy"
-  zh_Hans: "MCP Agent 策略"
+  zh_Hans: "MCP Agent 策略 Jewei"
 created_at: "2024-07-12T08:03:44.658609186Z"
 icon: icon.svg
 description:

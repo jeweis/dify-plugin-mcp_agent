@@ -89,22 +89,46 @@ class FunctionCallingAgentStrategy(AgentStrategy):
         mcp_tool_client = {}
         if mcp_server := parameters.get("mcp_server"):
             try:
+                # 尝试直接解析为JSON
                 mcp_configs = json.loads(mcp_server)
             except json.JSONDecodeError:
-                if not mcp_server.startswith("http"):
-                    raise
-                mcp_configs = {
-                    "default_server": {
-                        "url": mcp_server,
+                # 如果是HTTP URL，创建默认配置
+                if mcp_server.startswith("http"):
+                    mcp_configs = {
+                        "default_server": {
+                            "url": mcp_server,
+                        }
                     }
-                }
+                else:
+                    # 尝试使用ast.literal_eval安全地将字符串转换为字典
+                    try:
+                        import ast
+                        mcp_configs = ast.literal_eval(mcp_server)
+                    except Exception as e:
+                        # 记录错误并重新抛出，提供更清晰的错误信息
+                        error_msg = f"无法解析mcp_server配置: {mcp_server}. 错误: {str(e)}"
+                        print(error_msg)
+                        raise ValueError(error_msg)
             for mcp_server_name, mcp_server_config in mcp_configs.items():
                 mcp_server_url = mcp_server_config.get("url")
                 if not mcp_server_url:
                     raise Exception("MCP server url is not provided")
 
 
-                m_client = MCPClient(mcp_server_url)
+                # 提取所有配置参数
+                headers = mcp_server_config.get("headers", {})
+                timeout = mcp_server_config.get("timeout", 5)
+                sse_read_timeout = mcp_server_config.get("sse_read_timeout", 300)
+                
+                print(f"连接MCP服务器: {mcp_server_url} 使用headers: {headers}")
+                
+                # 创建客户端并传递所有配置参数
+                m_client = MCPClient(
+                    sse_url=mcp_server_url,
+                    headers=headers,
+                    timeout=timeout,
+                    sse_read_timeout=sse_read_timeout
+                )
                 m_client.initialize()
                 mcp_tools = m_client.list_tools()
                 mcp_tool_instances = {tool.get("name"): tool for tool in mcp_tools}
